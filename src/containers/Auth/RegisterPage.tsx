@@ -1,15 +1,39 @@
+import { postRequest } from '@/api'
 import React, { FormEvent, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import useAutoLogin from '@/hook/useAutoLogin'
+
 export default function Registration() {
   const [name, setName] = useState<string>('')
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [passwordConfirm, setPasswordConfirm] = useState<string>('')
+  const navigate = useNavigate()
+
+  function redirectSignIn() {
+    navigate('sign-up')
+  }
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    toast.info('Hey')
+    if (password != passwordConfirm) {
+      toast.error("Password doesn't match.")
+    } else {
+      postRequest({
+        url: 'register',
+        data: {
+          name,
+          password,
+          email
+        },
+        success: () => {
+          toast.info('Registered.')
+          redirectSignIn()
+        }
+      })
+    }
   }
+  useAutoLogin()
   return (
     <div>
       <div className="flex flex-col items-center min-h-screen pt-6 sm:justify-center sm:pt-0 bg-gray-50">

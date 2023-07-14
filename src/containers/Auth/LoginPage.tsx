@@ -1,16 +1,54 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { postRequest } from '@/api'
+import { AppContext } from '@/context'
 
+import React, { FormEvent, useContext, useState } from 'react'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import useAutoLogin from '@/hook/useAutoLogin'
 export default function Login() {
+  console.log('Login Render')
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
-  return (
+  const { login, isAuth } = useContext(AppContext)
+  const location = useLocation()
+
+  const redirectLocation =
+    location.state &&
+    location.state.from &&
+    location.state.from != 'sign-in' &&
+    location.state.from != 'sign-up'
+      ? location.state.from
+      : '/home'
+  const navigate = useNavigate()
+  const handleLogin = (e: any) => {
+    toast.info('Logged in Successfully')
+    login(e.user, e.token)
+    if (location.state.from) {
+      navigate(location.state.from)
+    }
+  }
+
+  const handleSubmit = (e: FormEvent) => {
+    // e.stopPropagation()
+    postRequest({
+      url: 'login',
+      data: {
+        email,
+        password
+      },
+      success: handleLogin
+    })
+    e.preventDefault()
+  }
+  useAutoLogin({ redirectLocation })
+
+  return !isAuth ? (
     <div className="relative flex flex-col justify-center min-h-screen overflow-hidden">
       <div className="w-full p-6 m-auto bg-white rounded-md shadow-xl lg:max-w-xl">
         <h1 className="text-3xl font-semibold text-center text-purple-700 uppercase">
           Sign In
         </h1>
-        <form className="mt-6">
+        <form className="mt-6" onSubmit={handleSubmit}>
           <div className="mb-2">
             <label
               htmlFor="email"
@@ -40,12 +78,12 @@ export default function Login() {
             />
           </div>
           <a href="#" className="text-xs text-purple-600 hover:underline">
-            htmlForget Password?
+            Forget Password?
           </a>
           <div className="mt-6">
             <button
               type="submit"
-              className="w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transhtmlForm bg-purple-700 rounded-md hover:bg-purple-600 focus:outline-none focus:bg-purple-600"
+              className="w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transform bg-purple-700 rounded-md hover:bg-purple-600 focus:outline-none focus:bg-purple-600"
             >
               Login
             </button>
@@ -99,5 +137,7 @@ export default function Login() {
         </p>
       </div>
     </div>
+  ) : (
+    <Navigate to={redirectLocation} />
   )
 }
